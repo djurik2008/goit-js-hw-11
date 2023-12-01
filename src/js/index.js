@@ -61,7 +61,6 @@ async function onLoadMoreClick() {
         const loadMoreImages = await imagesSearchService(query, page)
         const {data: {hits, totalHits}} = loadMoreImages
         const loadedImages = page * 40
-        console.log(loadedImages)
         refs.galleryContainer.insertAdjacentHTML('beforeend', createMarkup(hits))
         if (loadedImages > totalHits) {
         
