@@ -1,7 +1,8 @@
 import Notiflix from 'notiflix';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
-import {imagesSearchService, createMarkup} from "./services"
+import {imagesSearchService} from "./services";
+import {createMarkup} from "./markup"
 
 const refs = {
     searchForm: document.querySelector('.search-form'),
@@ -15,6 +16,7 @@ refs.loadMoreBtn.addEventListener('click', onLoadMoreClick)
 
 refs.loadMoreBtn.classList.add('is-hidden')
 let page = 1;
+let perPage = 40
 let query = '';
 let simpleLightBox = new SimpleLightbox('.gallery a')
 
@@ -22,6 +24,7 @@ let simpleLightBox = new SimpleLightbox('.gallery a')
 async function onSearchSubmit(e) {
     e.preventDefault()
     refs.galleryContainer.innerHTML = ""
+    page = 1
 
     query = e.target.elements.searchQuery.value.trim()
     if (query === '') {
@@ -32,7 +35,7 @@ async function onSearchSubmit(e) {
     }
 
     try {
-        const fetchResault = await imagesSearchService(query)
+        const fetchResault = await imagesSearchService(query, page)
         const {data: {hits, totalHits}} = fetchResault
     if (totalHits === 0) {
         Notiflix.Notify.failure(
@@ -55,18 +58,20 @@ async function onSearchSubmit(e) {
 async function onLoadMoreClick() {
     page += 1
     try {
-        const losdMoreImages = await imagesSearchService(query, page)
-    const {data: {hits, totalHits}} = losdMoreImages
-    const loadedImages = page * 40
-    if (loadedImages > totalHits) {
-        Notiflix.Notify.failure(
-            "We're sorry, but you've reached the end of search results."
-        );
-        refs.loadMoreBtn.classList.add('is-hidden')
-        return
-    }
-    refs.galleryContainer.insertAdjacentHTML('beforeend', createMarkup(hits))
-    simpleLightBox.refresh();
+        const loadMoreImages = await imagesSearchService(query, page)
+        const {data: {hits, totalHits}} = loadMoreImages
+        const loadedImages = page * 40
+        console.log(loadedImages)
+        refs.galleryContainer.insertAdjacentHTML('beforeend', createMarkup(hits))
+        if (loadedImages > totalHits) {
+        
+            Notiflix.Notify.failure(
+                "We're sorry, but you've reached the end of search results."
+            );
+            refs.loadMoreBtn.classList.add('is-hidden')
+            return
+        }
+        simpleLightBox.refresh();
     } catch (error) {
         Notiflix.Notify.failure(`Oops, something went wrong! ${error.message}`);
     }
